@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,13 +15,24 @@ func (d dollars) String() string {
 type database map[string]dollars
 
 func (db database) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	buffer := bytes.Buffer{}
-
-	for item, price := range db {
-		buffer.WriteString(fmt.Sprintf("%s: %s\n", item, price))
+	switch r.URL.Path {
+	case "/list":
+		for item, price := range db {
+			fmt.Fprintf(w, "%s: %s\n", item, price)
+		}
+	case "/price":
+		item := r.URL.Query().Get("item")
+		price, ok := db[item]
+		if !ok {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, "can't find this item: %s\n", item)
+			return
+		}
+		fmt.Fprintf(w, "%s\n", price)
+	default:
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "Page not found: %s\n", r.URL)
 	}
-
-	w.Write(buffer.Bytes())
 }
 
 func main() {
