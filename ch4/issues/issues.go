@@ -2,13 +2,18 @@ package main
 
 import (
 	"fmt"
-	"tgb/ch4/github"
 	"log"
 	"os"
+	"tgb/ch4/github"
 )
 
 func main() {
-	result, err := github.SearchIssues(os.Args[1:])
+	filtersList := os.Args[1:]
+	if len(filtersList) == 0 {
+		filtersList = []string{"repo:golang/go"}
+	}
+
+	result, err := github.SearchIssues(filtersList)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -16,6 +21,6 @@ func main() {
 	fmt.Printf("%d тем:\n", result.TotalCount)
 	for _, item := range result.Items {
 		fmt.Printf("#%-5d %9.9s %.55s\n",
-		item.Number, item.User.Login, item.Title)
+			item.Number, item.User.Login, item.Title)
 	}
 }
